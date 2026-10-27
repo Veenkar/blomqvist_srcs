@@ -15,6 +15,7 @@ except ImportError:  # Python 2
     from urllib import urlencode,quote,unquote
 
 import re
+import json
 
 import xbmcaddon
 import socket
@@ -109,7 +110,11 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
             result = requests.post(url=licurl, headers=ab, data=challenge,verify=False).content
             if PY3:
                 result = result.decode(encoding='utf-8', errors='strict')
-            licens=re.findall('ontentid=".+?">(.+?)<',result)[0]
+            if result.lstrip().startswith('{'):
+                # DASH (DRM_MKPC_WIDEVINE_DASH): odpowiedz JSON z licencja w base64
+                licens = json.loads(result)['licenseresponse']['clientresponse']['license'][0]['data']
+            else:
+                licens=re.findall('ontentid=".+?">(.+?)<',result)[0]
             if PY3:
                 licens= licens.encode(encoding='utf-8', errors='strict')
         elif 'censetv=' in path:
