@@ -1010,8 +1010,13 @@ class CANALvod(object):
 		}
 		response = getRequests('https://hodor.canalplus.pro/api/v2/mycanalint/authenticate.json/webapp/6.0', headers=headers, params=params)
 
-		self.CMStoken = response['token']
-		set_setting('CMStoken', self.CMStoken)
+		# token CMS potrzebny tylko do przegladania VOD - brak nie blokuje logowania
+		if isinstance(response, dict) and response.get('token'):
+			self.CMStoken = response['token']
+			set_setting('CMStoken', self.CMStoken)
+		else:
+			desc = (list(response.keys())[:10], dict((k, str(response[k])[:150]) for k in ('message', 'error', 'errorCode', 'code', 'status', 'title') if k in response)) if isinstance(response, dict) else str(response)[:300]
+			xbmc.log('@#@hodor authenticate: brak tokenu, odpowiedz: %s' % str(desc), LOGNOTICE)
 
 		return
 
